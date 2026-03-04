@@ -344,9 +344,48 @@ function hanoi(n, from, to, via) {
   }
 }`
   },
+  {
+    id: 'circular-queue',
+    name: 'Circular Queue',
+    category: 'queue',
+    description: 'Circular Queue uses a fixed-size array where the rear pointer wraps back to the front when it reaches the end, forming a ring. This avoids wasted space after dequeue operations.',
+    timeComplexity: 'O(1)',
+    spaceComplexity: 'O(n)',
+    code: `class CircularQueue {
+  constructor(size) {
+    this.items = new Array(size);
+    this.front = -1;
+    this.rear = -1;
+    this.size = size;
+  }
 
+  enqueue(element) {
+    if (this.isFull()) return false;
+    if (this.front === -1) this.front = 0;
+    this.rear = (this.rear + 1) % this.size; // wrap around
+    this.items[this.rear] = element;
+    return true;
+  }
+
+  dequeue() {
+    if (this.isEmpty()) return null;
+    const item = this.items[this.front];
+    if (this.front === this.rear) {
+      this.front = -1; // queue now empty
+      this.rear = -1;
+    } else {
+      this.front = (this.front + 1) % this.size; // wrap around
+    }
+    return item;
+  }
+
+  isFull() { return (this.rear + 1) % this.size === this.front; }
+  isEmpty() { return this.front === -1; }
+}`
+  },
 
   // Linked List
+
   {
     id: 'linked-list',
     name: 'Linked List',

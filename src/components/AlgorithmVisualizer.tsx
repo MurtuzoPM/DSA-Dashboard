@@ -113,58 +113,67 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
     addStep();
 
     switch (sortType) {
-      case 'bubble-sort':
+      case 'bubble-sort': {
+        const sortedSet = new Set<number>();
         for (let i = 0; i < n - 1; i++) {
           for (let j = 0; j < n - i - 1; j++) {
-            addStep([j, j + 1]);
+            addStep([j, j + 1], [], Array.from(sortedSet));
             if (array[j] > array[j + 1]) {
-              addStep([j, j + 1], [j, j + 1]);
+              addStep([j, j + 1], [j, j + 1], Array.from(sortedSet));
               [array[j], array[j + 1]] = [array[j + 1], array[j]];
-              addStep([j, j + 1], []);
+              addStep([j, j + 1], [], Array.from(sortedSet));
             }
           }
-          addStep([], [], [n - 1 - i]);
+          sortedSet.add(n - 1 - i);
+          addStep([], [], Array.from(sortedSet));
         }
-        addStep([], [], [0]);
+        sortedSet.add(0);
+        addStep([], [], Array.from(sortedSet));
         break;
+      }
 
-      case 'selection-sort':
+      case 'selection-sort': {
+        const sortedSet = new Set<number>();
         for (let i = 0; i < n - 1; i++) {
           let minIdx = i;
           for (let j = i + 1; j < n; j++) {
-            addStep([minIdx, j]);
+            addStep([minIdx, j], [], Array.from(sortedSet));
             if (array[j] < array[minIdx]) {
               minIdx = j;
             }
           }
           if (minIdx !== i) {
-            addStep([i, minIdx], [i, minIdx]);
+            addStep([i, minIdx], [i, minIdx], Array.from(sortedSet));
             [array[i], array[minIdx]] = [array[minIdx], array[i]];
-            addStep([i, minIdx], []);
+            addStep([i, minIdx], [], Array.from(sortedSet));
           }
-          addStep([], [], [i]);
+          sortedSet.add(i);
+          addStep([], [], Array.from(sortedSet));
         }
-        addStep([], [], [n - 1]);
+        sortedSet.add(n - 1);
+        addStep([], [], Array.from(sortedSet));
         break;
+      }
 
-      case 'insertion-sort':
+      case 'insertion-sort': {
         addStep([], [], [0]);
         for (let i = 1; i < n; i++) {
           let key = array[i];
           let j = i - 1;
-          addStep([i]);
+          addStep([i], [], Array.from({ length: i }, (_, k) => k));
           while (j >= 0 && array[j] > key) {
-            addStep([j, j + 1], [j, j + 1]);
+            addStep([j, j + 1], [j, j + 1], Array.from({ length: i }, (_, k) => k));
             array[j + 1] = array[j];
-            addStep([j, j + 1], []);
+            addStep([j, j + 1], [], Array.from({ length: i }, (_, k) => k));
             j--;
           }
           array[j + 1] = key;
           addStep([], [], Array.from({ length: i + 1 }, (_, k) => k));
         }
         break;
+      }
 
-      case 'merge-sort':
+      case 'merge-sort': {
         const mergeSort = (left: number, right: number) => {
           if (left >= right) return;
           const mid = Math.floor((left + right) / 2);
@@ -193,43 +202,7 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
         mergeSort(0, n - 1);
         addStep([], [], Array.from({ length: n }, (_, k) => k));
         break;
-
-      case 'heap-sort':
-        const heapify = (size: number, root: number) => {
-          let largest = root;
-          const left = 2 * root + 1;
-          const right = 2 * root + 2;
-
-          if (left < size) {
-            addStep([largest, left]);
-            if (array[left] > array[largest]) largest = left;
-          }
-          if (right < size) {
-            addStep([largest, right]);
-            if (array[right] > array[largest]) largest = right;
-          }
-
-          if (largest !== root) {
-            addStep([root, largest], [root, largest]);
-            [array[root], array[largest]] = [array[largest], array[root]];
-            addStep([root, largest], []);
-            heapify(size, largest);
-          }
-        };
-
-        for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
-          heapify(n, i);
-        }
-
-        for (let i = n - 1; i > 0; i--) {
-          addStep([0, i], [0, i]);
-          [array[0], array[i]] = [array[i], array[0]];
-          addStep([0, i], []);
-          addStep([], [], Array.from({ length: n - i }, (_, k) => n - 1 - k));
-          heapify(i, 0);
-        }
-        addStep([], [], Array.from({ length: n }, (_, k) => k));
-        break;
+      }
     }
 
     return steps;
@@ -433,8 +406,9 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
       if (state.nodes.length === 0) {
         setState({ ...state, nodes: [newNode] });
       } else {
+        const lastIndex = state.nodes.length - 1;
         const newNodes = [...state.nodes];
-        newNodes[newNodes.length - 1].next = newNode.id;
+        newNodes[lastIndex] = { ...newNodes[lastIndex], next: newNode.id };
         newNodes.push(newNode);
         setState({ ...state, nodes: newNodes });
       }
@@ -449,9 +423,14 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
         return;
       }
 
-      const newNodes = state.nodes.filter((_, i) => i !== index);
-      if (index > 0 && index < newNodes.length) {
-        newNodes[index - 1].next = newNodes[index]?.id || null;
+      let newNodes = state.nodes.filter((_, i) => i !== index);
+      if (index > 0) {
+        // Correctly update the 'next' pointer of the node previously before the deleted one
+        newNodes = newNodes.map((node, i) =>
+          i === index - 1
+            ? { ...node, next: newNodes[index]?.id || null }
+            : node
+        );
       }
       setState({ ...state, nodes: newNodes });
     }
@@ -576,7 +555,6 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
             onSearch={handleLinkedListSearch}
             searchResult={state.searchResult}
             isDoubly={algorithm.id === 'doubly-linked-list'}
-            isCircular={algorithm.id === 'circular-linked-list'}
           />
         );
       case 'hash':

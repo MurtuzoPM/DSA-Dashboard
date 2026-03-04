@@ -238,22 +238,24 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
   // Generate steps for searching algorithms
   const generateSearchingSteps = useCallback((arr: number[], target: number, searchType: string) => {
     const steps: VisualizationState[] = [];
-    const array = [...arr].sort((a, b) => a - b);
-
-    const addStep = (comparing: number[] = [], found: number | null = null) => {
-      steps.push({
-        type: 'array',
-        array: [...array],
-        comparing: [...comparing],
-        swapping: [],
-        sorted: [],
-        found
-      });
-    };
-
-    addStep();
 
     if (searchType === 'linear-search') {
+      // Linear search: use the ORIGINAL unsorted array — scan left to right
+      const array = [...arr];
+
+      const addStep = (comparing: number[] = [], found: number | null = null, notFound = false) => {
+        steps.push({
+          type: 'array',
+          array: [...array],
+          comparing: [...comparing],
+          swapping: [],
+          sorted: notFound ? Array.from({ length: array.length }, (_, k) => k) : [],
+          found
+        });
+      };
+
+      addStep();
+
       for (let i = 0; i < array.length; i++) {
         addStep([i]);
         if (array[i] === target) {
@@ -261,26 +263,51 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           return steps;
         }
       }
+
+      addStep([], null, true); // not found
+      return steps;
+
     } else if (searchType === 'binary-search') {
+      // Binary search: array must be sorted
+      const array = [...arr].sort((a, b) => a - b);
+
+      const addStep = (comparing: number[] = [], found: number | null = null, eliminated: number[] = []) => {
+        steps.push({
+          type: 'array',
+          array: [...array],
+          comparing: [...comparing],
+          swapping: [],
+          sorted: [...eliminated],
+          found
+        });
+      };
+
+      addStep();
       let left = 0;
       let right = array.length - 1;
+      const eliminated: number[] = [];
 
       while (left <= right) {
         const mid = Math.floor((left + right) / 2);
-        addStep([mid]);
+        addStep([mid], null, [...eliminated]);
 
         if (array[mid] === target) {
-          addStep([mid], mid);
+          addStep([mid], mid, [...eliminated]);
           return steps;
         } else if (array[mid] < target) {
+          for (let i = left; i < mid; i++) eliminated.push(i);
+          eliminated.push(mid);
           left = mid + 1;
         } else {
+          for (let i = mid; i <= right; i++) eliminated.push(i);
           right = mid - 1;
         }
       }
+
+      addStep([], null, Array.from({ length: array.length }, (_, k) => k));
+      return steps;
     }
 
-    addStep([], -1);
     return steps;
   }, []);
 

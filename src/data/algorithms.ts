@@ -146,109 +146,7 @@ function merge(left, right) {
   return result.concat(left.slice(i)).concat(right.slice(j));
 }`
   },
-  {
-    id: 'heap-sort',
-    name: 'Heap Sort',
-    category: 'sorting',
-    description: 'Heap Sort uses a binary heap data structure to sort elements by repeatedly extracting the maximum element.',
-    timeComplexity: 'O(n log n)',
-    spaceComplexity: 'O(1)',
-    code: `function heapSort(arr) {
-  const n = arr.length;
-  
-  // Build max heap
-  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
-    heapify(arr, n, i);
-  }
-  
-  // Extract elements from heap
-  for (let i = n - 1; i > 0; i--) {
-    [arr[0], arr[i]] = [arr[i], arr[0]];
-    heapify(arr, i, 0);
-  }
-  return arr;
-}
 
-function heapify(arr, n, i) {
-  let largest = i;
-  const left = 2 * i + 1;
-  const right = 2 * i + 2;
-  
-  if (left < n && arr[left] > arr[largest]) largest = left;
-  if (right < n && arr[right] > arr[largest]) largest = right;
-  
-  if (largest !== i) {
-    [arr[i], arr[largest]] = [arr[largest], arr[i]];
-    heapify(arr, n, largest);
-  }
-}`
-  },
-  {
-    id: 'radix-sort',
-    name: 'Radix Sort',
-    category: 'sorting',
-    description: 'Radix Sort sorts numbers by processing individual digits from least significant to most significant.',
-    timeComplexity: 'O(d × (n + k))',
-    spaceComplexity: 'O(n + k)',
-    code: `function radixSort(arr) {
-  const max = Math.max(...arr);
-  
-  for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
-    countingSortByDigit(arr, exp);
-  }
-  return arr;
-}
-
-function countingSortByDigit(arr, exp) {
-  const n = arr.length;
-  const output = new Array(n);
-  const count = new Array(10).fill(0);
-  
-  for (let i = 0; i < n; i++) {
-    count[Math.floor(arr[i] / exp) % 10]++;
-  }
-  
-  for (let i = 1; i < 10; i++) {
-    count[i] += count[i - 1];
-  }
-  
-  for (let i = n - 1; i >= 0; i--) {
-    output[count[Math.floor(arr[i] / exp) % 10] - 1] = arr[i];
-    count[Math.floor(arr[i] / exp) % 10]--;
-  }
-  
-  for (let i = 0; i < n; i++) {
-    arr[i] = output[i];
-  }
-}`
-  },
-  {
-    id: 'counting-sort',
-    name: 'Counting Sort',
-    category: 'sorting',
-    description: 'Counting Sort counts the occurrences of each unique element and uses this information to place elements in sorted order.',
-    timeComplexity: 'O(n + k)',
-    spaceComplexity: 'O(k)',
-    code: `function countingSort(arr) {
-  const max = Math.max(...arr);
-  const min = Math.min(...arr);
-  const count = new Array(max - min + 1).fill(0);
-  
-  // Count occurrences
-  for (let i = 0; i < arr.length; i++) {
-    count[arr[i] - min]++;
-  }
-  
-  // Reconstruct sorted array
-  let index = 0;
-  for (let i = 0; i < count.length; i++) {
-    while (count[i]-- > 0) {
-      arr[index++] = i + min;
-    }
-  }
-  return arr;
-}`
-  },
 
   // Stack Operations
   {
@@ -374,7 +272,7 @@ function operate(op, a, b) {
       while (stack.length && stack[stack.length-1] !== '(') {
         output += ' ' + stack.pop();
       }
-      stack.pop(); // remove '('
+      stack.pop();
     } else if (ch in precedence) {
       while (stack.length && precedence[stack[stack.length-1]] >= precedence[ch]) {
         output += ' ' + stack.pop();
@@ -396,12 +294,12 @@ function operate(op, a, b) {
     code: `// Factorial using recursion
 function factorial(n) {
   if (n <= 1) return 1;      // base case
-  return n * factorial(n - 1); // recursive call
+  return n * factorial(n - 1);
 }
 
 // Fibonacci using recursion
 function fibonacci(n) {
-  if (n <= 1) return n;     // base case
+  if (n <= 1) return n;
   return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
@@ -415,6 +313,7 @@ function hanoi(n, from, to, via) {
   },
 
   // Queue Operations
+
   {
     id: 'queue-operations',
     name: 'Queue (Insertion and Deletion)',
@@ -445,50 +344,7 @@ function hanoi(n, from, to, via) {
   }
 }`
   },
-  {
-    id: 'circular-queue',
-    name: 'Circular Queue',
-    category: 'queue',
-    description: 'Circular Queue uses a fixed-size array where the last position connects back to the first, optimizing space usage.',
-    timeComplexity: 'O(1)',
-    spaceComplexity: 'O(n)',
-    code: `class CircularQueue {
-  constructor(size) {
-    this.items = new Array(size);
-    this.front = -1;
-    this.rear = -1;
-    this.size = size;
-  }
-  
-  enqueue(element) {
-    if (this.isFull()) return false;
-    if (this.front === -1) this.front = 0;
-    this.rear = (this.rear + 1) % this.size;
-    this.items[this.rear] = element;
-    return true;
-  }
-  
-  dequeue() {
-    if (this.isEmpty()) return null;
-    const item = this.items[this.front];
-    if (this.front === this.rear) {
-      this.front = -1;
-      this.rear = -1;
-    } else {
-      this.front = (this.front + 1) % this.size;
-    }
-    return item;
-  }
-  
-  isFull() {
-    return (this.rear + 1) % this.size === this.front;
-  }
-  
-  isEmpty() {
-    return this.front === -1;
-  }
-}`
-  },
+
 
   // Linked List
   {
@@ -596,67 +452,9 @@ class DoublyLinkedList {
   }
 }`
   },
-  {
-    id: 'circular-linked-list',
-    name: 'Circular Linked List',
-    category: 'linkedlist',
-    description: 'Circular Linked List is a linked list where the last node points back to the first node, forming a circle.',
-    timeComplexity: 'O(n)',
-    spaceComplexity: 'O(n)',
-    code: `class CNode {
-  constructor(data) {
-    this.data = data;
-    this.next = null;
-  }
-}
-
-class CircularLinkedList {
-  constructor() {
-    this.head = null;
-  }
-  
-  insert(data) {
-    const newNode = new CNode(data);
-    if (!this.head) {
-      this.head = newNode;
-      newNode.next = this.head;
-      return;
-    }
-    let current = this.head;
-    while (current.next !== this.head) {
-      current = current.next;
-    }
-    current.next = newNode;
-    newNode.next = this.head;
-  }
-  
-  delete(data) {
-    if (!this.head) return;
-    if (this.head.data === data) {
-      if (this.head.next === this.head) {
-        this.head = null;
-        return;
-      }
-      let current = this.head;
-      while (current.next !== this.head) {
-        current = current.next;
-      }
-      current.next = this.head.next;
-      this.head = this.head.next;
-      return;
-    }
-    let current = this.head;
-    while (current.next !== this.head && current.next.data !== data) {
-      current = current.next;
-    }
-    if (current.next !== this.head) {
-      current.next = current.next.next;
-    }
-  }
-}`
-  },
 
   // Hash Functions
+
   {
     id: 'hash-open',
     name: 'Open Hashing (Separate Chaining)',

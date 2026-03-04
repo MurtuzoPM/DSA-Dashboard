@@ -146,6 +146,67 @@ function merge(left, right) {
   return result.concat(left.slice(i)).concat(right.slice(j));
 }`
   },
+  {
+    id: 'radix-sort',
+    name: 'Radix Sort',
+    category: 'sorting',
+    description: 'Radix Sort is a non-comparative sorting algorithm that sorts data by processing individual digits. It sorts the input numbers digit by digit, starting from the least significant digit.',
+    timeComplexity: 'O(nk)',
+    spaceComplexity: 'O(n+k)',
+    code: `function radixSort(arr) {
+  const max = Math.max(...arr);
+  for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
+    countingSortForRadix(arr, exp);
+  }
+  return arr;
+}
+
+function countingSortForRadix(arr, exp) {
+  const n = arr.length;
+  const output = new Array(n);
+  const count = new Array(10).fill(0);
+  
+  for (let i = 0; i < n; i++) {
+    count[Math.floor(arr[i] / exp) % 10]++;
+  }
+  for (let i = 1; i < 10; i++) {
+    count[i] += count[i - 1];
+  }
+  for (let i = n - 1; i >= 0; i--) {
+    const digit = Math.floor(arr[i] / exp) % 10;
+    output[count[digit] - 1] = arr[i];
+    count[digit]--;
+  }
+  for (let i = 0; i < n; i++) {
+    arr[i] = output[i];
+  }
+}`
+  },
+  {
+    id: 'counting-sort',
+    name: 'Counting Sort',
+    category: 'sorting',
+    description: 'Counting Sort is a non-comparative sorting algorithm that works by counting the number of objects having each distinct key value.',
+    timeComplexity: 'O(n+k)',
+    spaceComplexity: 'O(k)',
+    code: `function countingSort(arr) {
+  const max = Math.max(...arr);
+  const count = new Array(max + 1).fill(0);
+  
+  for (let num of arr) {
+    count[num]++;
+  }
+  
+  let index = 0;
+  for (let i = 0; i < count.length; i++) {
+    while (count[i] > 0) {
+      arr[index++] = i;
+      count[i]--;
+    }
+  }
+  return arr;
+}`
+  },
 
 
   // Stack Operations

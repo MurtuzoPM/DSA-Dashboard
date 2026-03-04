@@ -203,6 +203,59 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
         addStep([], [], Array.from({ length: n }, (_, k) => k));
         break;
       }
+
+      case 'radix-sort': {
+        const max = Math.max(...array);
+        for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
+          const output = new Array(n);
+          const count = new Array(10).fill(0);
+
+          // Counting phase for current digit
+          for (let i = 0; i < n; i++) {
+            addStep([i]);
+            count[Math.floor(array[i] / exp) % 10]++;
+          }
+
+          for (let i = 1; i < 10; i++) count[i] += count[i - 1];
+
+          // Building output phase
+          for (let i = n - 1; i >= 0; i--) {
+            const digit = Math.floor(array[i] / exp) % 10;
+            output[count[digit] - 1] = array[i];
+            count[digit]--;
+          }
+
+          // Update main array and visualize
+          for (let i = 0; i < n; i++) {
+            array[i] = output[i];
+            addStep([], [i]);
+          }
+        }
+        addStep([], [], Array.from({ length: n }, (_, k) => k));
+        break;
+      }
+
+      case 'counting-sort': {
+        const max = Math.max(...array);
+        const count = new Array(max + 1).fill(0);
+
+        for (let i = 0; i < n; i++) {
+          addStep([i]);
+          count[array[i]]++;
+        }
+
+        let index = 0;
+        for (let i = 0; i < count.length; i++) {
+          while (count[i] > 0) {
+            array[index] = i;
+            addStep([], [index]);
+            index++;
+            count[i]--;
+          }
+        }
+        addStep([], [], Array.from({ length: n }, (_, k) => k));
+        break;
+      }
     }
 
     return steps;

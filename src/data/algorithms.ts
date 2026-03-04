@@ -345,33 +345,7 @@ function operate(op, a, b) {
   return output;
 }`
   },
-  {
-    id: 'recursion',
-    name: 'Recursion',
-    category: 'stack',
-    description: 'Recursion is a technique where a function calls itself to solve smaller sub-problems. The call stack keeps track of each function call. Base cases stop the recursion.',
-    timeComplexity: 'O(n)',
-    spaceComplexity: 'O(n) — call stack depth',
-    code: `// Factorial using recursion
-function factorial(n) {
-  if (n <= 1) return 1;      // base case
-  return n * factorial(n - 1);
-}
 
-// Fibonacci using recursion
-function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
-}
-
-// Tower of Hanoi
-function hanoi(n, from, to, via) {
-  if (n === 0) return;
-  hanoi(n - 1, from, via, to);
-  console.log(\`Move disk \${n} from \${from} to \${to}\`);
-  hanoi(n - 1, via, to, from);
-}`
-  },
 
   // Queue Operations
 

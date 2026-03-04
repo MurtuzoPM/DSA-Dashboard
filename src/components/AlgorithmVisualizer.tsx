@@ -582,7 +582,7 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
         if (algorithm.id === 'evaluation') {
           return <ExpressionVisualization mode="evaluate" />;
         }
-        // Default: stack insertion/deletion + recursion show plain stack
+        // Default: stack insertion/deletion show plain stack
         return (
           <StackVisualization
             stack={state.stack}

@@ -28,6 +28,7 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [targetValue, setTargetValue] = useState<number>(50);
   const [currentStep, setCurrentStep] = useState(0);
+  const [speed, setSpeed] = useState(200);
   const [steps, setSteps] = useState<VisualizationState[]>([]);
   const [state, setState] = useState<VisualizationState>(() => {
     const initialArray = generateRandomArray(15);
@@ -368,7 +369,7 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           setState(steps[prev + 1]);
           return prev + 1;
         });
-      }, 500);
+      }, speed);
     } else {
       if (playIntervalRef.current) {
         clearInterval(playIntervalRef.current);
@@ -687,6 +688,8 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           targetValue={targetValue}
           onTargetChange={setTargetValue}
           showTargetInput={algorithm.category === 'searching'}
+          speed={speed}
+          onSpeedChange={setSpeed}
         />
       )}
 

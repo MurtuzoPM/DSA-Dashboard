@@ -8,7 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Play, Pause, Shuffle, SkipBack, SkipForward } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Play, Pause, Shuffle, SkipBack, SkipForward, Zap } from 'lucide-react';
 
 interface ControlsProps {
   arraySize: number;
@@ -25,6 +26,8 @@ interface ControlsProps {
   targetValue?: number;
   onTargetChange?: (value: number) => void;
   showTargetInput?: boolean;
+  speed: number;
+  onSpeedChange: (speed: number) => void;
 }
 
 export function Controls({
@@ -41,7 +44,9 @@ export function Controls({
   canStepForward,
   targetValue,
   onTargetChange,
-  showTargetInput = false
+  showTargetInput = false,
+  speed,
+  onSpeedChange
 }: ControlsProps) {
   return (
     <div className="flex flex-wrap items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -84,6 +89,24 @@ export function Controls({
         <Shuffle className="w-4 h-4" />
         Randomize
       </Button>
+
+      <div className="flex items-center gap-3 min-w-[140px] px-2">
+        <Zap className={`w-4 h-4 ${speed < 300 ? 'text-yellow-500 fill-yellow-500' : 'text-slate-400'}`} />
+        <div className="flex-1 flex flex-col gap-1">
+          <div className="flex justify-between items-center">
+            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Speed</Label>
+            <span className="text-[10px] font-mono text-slate-500">{speed}ms</span>
+          </div>
+          <Slider
+            value={[1050 - speed]} // Invert so right is faster (smaller interval)
+            min={50}
+            max={1000}
+            step={50}
+            onValueChange={([val]) => onSpeedChange(1050 - val)}
+            className="w-full"
+          />
+        </div>
+      </div>
 
       <div className="flex items-center gap-2">
         <Label className="text-sm font-medium text-slate-700 whitespace-nowrap">

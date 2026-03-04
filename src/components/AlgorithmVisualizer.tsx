@@ -235,24 +235,43 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
         break;
       }
 
-      case 'counting-sort': {
-        const max = Math.max(...array);
-        const count = new Array(max + 1).fill(0);
-
-        for (let i = 0; i < n; i++) {
-          addStep([i]);
-          count[array[i]]++;
-        }
-
-        let index = 0;
-        for (let i = 0; i < count.length; i++) {
-          while (count[i] > 0) {
-            array[index] = i;
-            addStep([], [index]);
-            index++;
-            count[i]--;
+      case 'quick-sort': {
+        const quickSort = (low: number, high: number) => {
+          if (low < high) {
+            const pi = partition(low, high);
+            quickSort(low, pi - 1);
+            quickSort(pi + 1, high);
+          } else if (low === high) {
+            // Single element is sorted
+            sortedIndices.add(low);
+            addStep([], [], Array.from(sortedIndices));
           }
-        }
+        };
+
+        const sortedIndices = new Set<number>();
+        const partition = (low: number, high: number) => {
+          const pivot = array[high];
+          let i = low - 1;
+
+          for (let j = low; j < high; j++) {
+            addStep([j, high]); // Comparing with pivot
+            if (array[j] < pivot) {
+              i++;
+              addStep([i, j], [i, j], Array.from(sortedIndices));
+              [array[i], array[j]] = [array[j], array[i]];
+              addStep([i, j], [], Array.from(sortedIndices));
+            }
+          }
+          addStep([i + 1, high], [i + 1, high], Array.from(sortedIndices));
+          [array[i + 1], array[high]] = [array[high], array[i + 1]];
+          addStep([i + 1, high], [], Array.from(sortedIndices));
+
+          sortedIndices.add(i + 1);
+          addStep([], [], Array.from(sortedIndices));
+          return i + 1;
+        };
+
+        quickSort(0, n - 1);
         addStep([], [], Array.from({ length: n }, (_, k) => k));
         break;
       }

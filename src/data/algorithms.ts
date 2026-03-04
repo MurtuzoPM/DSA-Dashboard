@@ -183,28 +183,32 @@ function countingSortForRadix(arr, exp) {
 }`
   },
   {
-    id: 'counting-sort',
-    name: 'Counting Sort',
+    id: 'quick-sort',
+    name: 'Quick Sort',
     category: 'sorting',
-    description: 'Counting Sort is a non-comparative sorting algorithm that works by counting the number of objects having each distinct key value.',
-    timeComplexity: 'O(n+k)',
-    spaceComplexity: 'O(k)',
-    code: `function countingSort(arr) {
-  const max = Math.max(...arr);
-  const count = new Array(max + 1).fill(0);
-  
-  for (let num of arr) {
-    count[num]++;
-  }
-  
-  let index = 0;
-  for (let i = 0; i < count.length; i++) {
-    while (count[i] > 0) {
-      arr[index++] = i;
-      count[i]--;
-    }
+    description: 'Quick Sort is a divide-and-conquer algorithm that picks an element as a pivot and partitions the given array around the picked pivot.',
+    timeComplexity: 'O(n log n)',
+    spaceComplexity: 'O(log n)',
+    code: `function quickSort(arr, low = 0, high = arr.length - 1) {
+  if (low < high) {
+    let pi = partition(arr, low, high);
+    quickSort(arr, low, pi - 1);
+    quickSort(arr, pi + 1, high);
   }
   return arr;
+}
+
+function partition(arr, low, high) {
+  let pivot = arr[high];
+  let i = low - 1;
+  for (let j = low; j < high; j++) {
+    if (arr[j] < pivot) {
+      i++;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+  [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+  return i + 1;
 }`
   },
 

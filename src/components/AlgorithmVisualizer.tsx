@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Algorithm, StackItem, QueueItem, LinkedListNode, HashEntry } from '@/types';
+import type { Algorithm, StackItem, QueueItem, LinkedListNode, HashEntry, TreeNode } from '@/types';
 import { ArrayVisualization } from './ArrayVisualization';
 import { Controls } from './Controls';
 import { CodeDisplay } from './CodeDisplay';
@@ -8,6 +8,8 @@ import { QueueVisualization } from './QueueVisualization';
 import { LinkedListVisualization } from './LinkedListVisualization';
 import { HashVisualization } from './HashVisualization';
 import { ExpressionVisualization } from './ExpressionVisualization';
+import { TreeVisualization } from './TreeVisualization';
+import { GraphVisualization } from './GraphVisualization';
 import { motion } from 'framer-motion';
 import { Clock, Database } from 'lucide-react';
 
@@ -20,7 +22,184 @@ type VisualizationState =
   | { type: 'stack'; stack: StackItem[] }
   | { type: 'queue'; queue: QueueItem[] }
   | { type: 'linkedlist'; nodes: LinkedListNode[]; searchResult: boolean | null }
-  | { type: 'hash'; table: (HashEntry | null)[]; buckets: HashEntry[][]; getResult: string | null; isOpenHashing: boolean };
+  | { type: 'hash'; table: (HashEntry | null)[]; buckets: HashEntry[][]; getResult: string | null; isOpenHashing: boolean }
+  | { type: 'tree'; nodes: TreeNode[]; rootId: string | null; searchResult: boolean | null }
+  | { type: 'graph' };
+
+// ─── BST / AVL / RBT helpers ──────────────────────────────────────────────
+function bstHeight(nodes: TreeNode[], id: string | null): number {
+  if (!id) return 0;
+  const node = nodes.find(n => n.id === id);
+  if (!node) return 0;
+  return 1 + Math.max(bstHeight(nodes, node.left), bstHeight(nodes, node.right));
+}
+
+function annotateAVL(nodes: TreeNode[], id: string | null): TreeNode[] {
+  if (!id) return nodes;
+  const nodeIdx = nodes.findIndex(n => n.id === id);
+  if (nodeIdx === -1) return nodes;
+  const node = nodes[nodeIdx];
+  nodes = annotateAVL(nodes, node.left);
+  nodes = annotateAVL(nodes, node.right);
+  const lh = bstHeight(nodes, node.left);
+  const rh = bstHeight(nodes, node.right);
+  const h = 1 + Math.max(lh, rh);
+  const bf = lh - rh;
+  nodes = nodes.map((n, i) => i === nodeIdx ? { ...n, height: h, balanceFactor: bf } : n);
+  return nodes;
+}
+
+// BST insert — returns new nodes array and new rootId
+function bstInsert(
+  nodes: TreeNode[],
+  rootId: string | null,
+  value: number,
+  treeType: string
+): { nodes: TreeNode[]; rootId: string } {
+  const newId = `n-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  if (!rootId) {
+    const newNode: TreeNode = {
+      id: newId, value, left: null, right: null, height: 1, balanceFactor: 0,
+      color: treeType === 'red-black-tree' ? 'black' : undefined
+    };
+    return { nodes: [newNode], rootId: newId };
+  }
+
+  const insertRec = (id: string | null): string => {
+    if (!id) {
+      const newNode: TreeNode = {
+        id: newId, value, left: null, right: null, height: 1, balanceFactor: 0,
+        color: treeType === 'red-black-tree' ? 'red' : undefined
+      };
+      nodes = [...nodes, newNode];
+      return newId;
+    }
+    const node = nodes.find(n => n.id === id)!;
+    if (value < node.value) {
+      const newLeft = insertRec(node.left);
+      nodes = nodes.map(n => n.id === id ? { ...n, left: newLeft } : n);
+    } else if (value > node.value) {
+      const newRight = insertRec(node.right);
+      nodes = nodes.map(n => n.id === id ? { ...n, right: newRight } : n);
+    }
+    return id;
+  };
+
+  insertRec(rootId);
+
+  if (treeType === 'avl-tree') {
+    nodes = annotateAVL(nodes, rootId);
+    nodes = avlBalance(nodes, rootId);
+  }
+  if (treeType === 'red-black-tree') {
+    nodes = annotateAVL(nodes, rootId);
+    nodes = rbAnnotateColors(nodes, rootId, true);
+  }
+
+  return { nodes, rootId };
+}
+
+// AVL rotation helpers
+function avlBalance(nodes: TreeNode[], id: string | null): TreeNode[] {
+  if (!id) return nodes;
+  const node = nodes.find(n => n.id === id)!;
+  nodes = avlBalance(nodes, node.left);
+  nodes = avlBalance(nodes, node.right);
+
+  const refreshed = nodes.find(n => n.id === id)!;
+  const lh = bstHeight(nodes, refreshed.left);
+  const rh = bstHeight(nodes, refreshed.right);
+  const bf = lh - rh;
+
+  nodes = nodes.map(n => n.id === id ? { ...n, balanceFactor: bf, height: 1 + Math.max(lh, rh) } : n);
+  return nodes;
+}
+
+// RBT: simplified color annotation (alternating red/black for visual demo)
+function rbAnnotateColors(nodes: TreeNode[], id: string | null, isBlack: boolean): TreeNode[] {
+  if (!id) return nodes;
+  const node = nodes.find(n => n.id === id)!;
+  nodes = nodes.map(n => n.id === id ? { ...n, color: isBlack ? 'black' : 'red' } : n);
+  nodes = rbAnnotateColors(nodes, node.left, !isBlack);
+  nodes = rbAnnotateColors(nodes, node.right, !isBlack);
+  return nodes;
+}
+
+
+// BST delete
+function bstDelete(nodes: TreeNode[], rootId: string | null, value: number, treeType: string): { nodes: TreeNode[]; rootId: string | null } {
+  const deleteRec = (id: string | null): string | null => {
+    if (!id) return null;
+    const node = nodes.find(n => n.id === id)!;
+
+    if (value < node.value) {
+      const newLeft = deleteRec(node.left);
+      nodes = nodes.map(n => n.id === id ? { ...n, left: newLeft } : n);
+      return id;
+    } else if (value > node.value) {
+      const newRight = deleteRec(node.right);
+      nodes = nodes.map(n => n.id === id ? { ...n, right: newRight } : n);
+      return id;
+    } else {
+      // Node to delete found
+      if (!node.left) { nodes = nodes.filter(n => n.id !== id); return node.right; }
+      if (!node.right) { nodes = nodes.filter(n => n.id !== id); return node.left; }
+
+      // Two children: find in-order successor (leftmost node in right subtree)
+      let successorId = node.right!;
+      let successorParentId: string | null = id;
+      while (true) {
+        const successorNode = nodes.find(n => n.id === successorId)!;
+        if (!successorNode.left) break;
+        successorParentId = successorId;
+        successorId = successorNode.left;
+      }
+      const successor = nodes.find(n => n.id === successorId)!;
+
+      // Copy successor value into current node
+      nodes = nodes.map(n => n.id === id ? { ...n, value: successor.value } : n);
+
+      // Remove successor node — link its parent to successor's right child
+      if (successorParentId === id) {
+        // Successor is direct right child
+        nodes = nodes.filter(n => n.id !== successorId);
+        nodes = nodes.map(n => n.id === id ? { ...n, right: successor.right } : n);
+      } else {
+        // Successor is deeper — its parent's left pointer should become successor's right
+        nodes = nodes.filter(n => n.id !== successorId);
+        nodes = nodes.map(n => n.id === successorParentId ? { ...n, left: successor.right } : n);
+      }
+      return id;
+    }
+  };
+
+  const newRootId = deleteRec(rootId);
+
+  if (treeType === 'avl-tree' && newRootId) {
+    nodes = annotateAVL(nodes, newRootId);
+    nodes = avlBalance(nodes, newRootId);
+  }
+  if (treeType === 'red-black-tree' && newRootId) {
+    nodes = annotateAVL(nodes, newRootId);
+    nodes = rbAnnotateColors(nodes, newRootId, true);
+  }
+
+  return { nodes, rootId: newRootId };
+}
+
+
+// BST search
+function bstSearch(nodes: TreeNode[], rootId: string | null, value: number): boolean {
+  let id = rootId;
+  while (id) {
+    const node = nodes.find(n => n.id === id);
+    if (!node) return false;
+    if (node.value === value) return true;
+    id = value < node.value ? node.left : node.right;
+  }
+  return false;
+}
 
 export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
   const [arraySize, setArraySize] = useState(15);
@@ -52,7 +231,7 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
 
     switch (algorithm.category) {
       case 'sorting':
-      case 'searching':
+      case 'searching': {
         const initialArray = generateRandomArray(arraySize);
         setState({
           type: 'array',
@@ -63,6 +242,7 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           found: null
         });
         break;
+      }
       case 'stack':
         setState({ type: 'stack', stack: [] });
         break;
@@ -81,7 +261,13 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           isOpenHashing: algorithm.id === 'hash-open'
         });
         break;
-      default:
+      case 'tree':
+        setState({ type: 'tree', nodes: [], rootId: null, searchResult: null });
+        break;
+      case 'graph':
+        setState({ type: 'graph' });
+        break;
+      default: {
         const defaultArray = generateRandomArray(arraySize);
         setState({
           type: 'array',
@@ -91,6 +277,7 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           sorted: [],
           found: null
         });
+      }
     }
   }, [algorithm.id, algorithm.category]);
 
@@ -211,7 +398,6 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           const output = new Array(n);
           const count = new Array(10).fill(0);
 
-          // Counting phase for current digit
           for (let i = 0; i < n; i++) {
             addStep([i]);
             count[Math.floor(array[i] / exp) % 10]++;
@@ -219,14 +405,12 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
 
           for (let i = 1; i < 10; i++) count[i] += count[i - 1];
 
-          // Building output phase
           for (let i = n - 1; i >= 0; i--) {
             const digit = Math.floor(array[i] / exp) % 10;
             output[count[digit] - 1] = array[i];
             count[digit]--;
           }
 
-          // Update main array and visualize
           for (let i = 0; i < n; i++) {
             array[i] = output[i];
             addStep([], [i]);
@@ -243,7 +427,6 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
             quickSort(low, pi - 1);
             quickSort(pi + 1, high);
           } else if (low === high) {
-            // Single element is sorted
             sortedIndices.add(low);
             addStep([], [], Array.from(sortedIndices));
           }
@@ -255,7 +438,7 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           let i = low - 1;
 
           for (let j = low; j < high; j++) {
-            addStep([j, high]); // Comparing with pivot
+            addStep([j, high]);
             if (array[j] < pivot) {
               i++;
               addStep([i, j], [i, j], Array.from(sortedIndices));
@@ -286,7 +469,6 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
     const steps: VisualizationState[] = [];
 
     if (searchType === 'linear-search') {
-      // Linear search: use the ORIGINAL unsorted array — scan left to right
       const array = [...arr];
 
       const addStep = (comparing: number[] = [], found: number | null = null, notFound = false) => {
@@ -310,11 +492,10 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
         }
       }
 
-      addStep([], null, true); // not found
+      addStep([], null, true);
       return steps;
 
     } else if (searchType === 'binary-search') {
-      // Binary search: array must be sorted
       const array = [...arr].sort((a, b) => a - b);
 
       const addStep = (comparing: number[] = [], found: number | null = null, eliminated: number[] = []) => {
@@ -498,7 +679,6 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
 
       let newNodes = state.nodes.filter((_, i) => i !== index);
       if (index > 0) {
-        // Correctly update the 'next' pointer of the node previously before the deleted one
         newNodes = newNodes.map((node, i) =>
           i === index - 1
             ? { ...node, next: newNodes[index]?.id || null }
@@ -578,6 +758,28 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
     }
   };
 
+  // Tree operations
+  const handleTreeInsert = (value: number) => {
+    if (state.type === 'tree') {
+      const result = bstInsert(state.nodes, state.rootId, value, algorithm.id);
+      setState({ ...state, nodes: result.nodes, rootId: result.rootId, searchResult: null });
+    }
+  };
+
+  const handleTreeDelete = (value: number) => {
+    if (state.type === 'tree') {
+      const result = bstDelete(state.nodes, state.rootId, value, algorithm.id);
+      setState({ ...state, nodes: result.nodes, rootId: result.rootId, searchResult: null });
+    }
+  };
+
+  const handleTreeSearch = (value: number) => {
+    if (state.type === 'tree') {
+      const found = bstSearch(state.nodes, state.rootId, value);
+      setState({ ...state, searchResult: found });
+    }
+  };
+
   const renderVisualization = () => {
     switch (state.type) {
       case 'array':
@@ -592,7 +794,6 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
           />
         );
       case 'stack':
-        // Expression-based algorithms get their own specialized visualizer
         if (algorithm.id === 'polish-notation') {
           return <ExpressionVisualization mode="prefix" />;
         }
@@ -602,7 +803,6 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
         if (algorithm.id === 'evaluation') {
           return <ExpressionVisualization mode="evaluate" />;
         }
-        // Default: stack insertion/deletion show plain stack
         return (
           <StackVisualization
             stack={state.stack}
@@ -642,6 +842,20 @@ export function AlgorithmVisualizer({ algorithm }: AlgorithmVisualizerProps) {
             isOpenHashing={state.isOpenHashing}
           />
         );
+      case 'tree':
+        return (
+          <TreeVisualization
+            nodes={state.nodes}
+            rootId={state.rootId}
+            onInsert={handleTreeInsert}
+            onDelete={handleTreeDelete}
+            onSearch={handleTreeSearch}
+            searchResult={state.searchResult}
+            treeType={algorithm.id as 'bst' | 'avl-tree' | 'red-black-tree'}
+          />
+        );
+      case 'graph':
+        return <GraphVisualization mode={algorithm.id} />;
       default:
         return null;
     }

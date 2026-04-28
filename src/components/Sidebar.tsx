@@ -6,7 +6,9 @@ import {
   Link,
   Hash,
   ChevronDown,
-  BookOpen
+  BookOpen,
+  GitBranch,
+  Network
 } from 'lucide-react';
 import { categories, getAlgorithmsByCategory } from '@/data/algorithms';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,8 @@ const iconMap: Record<string, React.ElementType> = {
   List,
   Link,
   Hash,
+  GitBranch,
+  Network,
 };
 
 const categoryColors: Record<string, string> = {
@@ -34,6 +38,8 @@ const categoryColors: Record<string, string> = {
   queue: 'from-green-500 to-emerald-400',
   linkedlist: 'from-rose-500 to-red-400',
   hash: 'from-teal-500 to-cyan-400',
+  tree: 'from-violet-500 to-purple-400',
+  graph: 'from-amber-500 to-orange-400',
 };
 
 const categoryGlow: Record<string, string> = {
@@ -43,6 +49,8 @@ const categoryGlow: Record<string, string> = {
   queue: 'shadow-green-500/30',
   linkedlist: 'shadow-rose-500/30',
   hash: 'shadow-teal-500/30',
+  tree: 'shadow-violet-500/30',
+  graph: 'shadow-amber-500/30',
 };
 
 export function Sidebar({ selectedAlgorithm, onSelectAlgorithm }: SidebarProps) {

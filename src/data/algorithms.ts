@@ -620,6 +620,385 @@ class DoublyLinkedList {
 }`
   },
 
+  // Tree
+
+  {
+    id: 'bst',
+    name: 'Binary Search Tree',
+    category: 'tree',
+    description: 'A Binary Search Tree (BST) stores values such that every left child is smaller and every right child is larger than the parent. Supports efficient Traversal (In/Pre/Post), Insertion, Deletion, and Search.',
+    timeComplexity: 'O(log n) avg, O(n) worst',
+    spaceComplexity: 'O(n)',
+    code: `class BST {
+  insert(root, value) {
+    if (!root) return new Node(value);
+    if (value < root.value)
+      root.left = this.insert(root.left, value);
+    else if (value > root.value)
+      root.right = this.insert(root.right, value);
+    return root;
+  }
+
+  delete(root, value) {
+    if (!root) return null;
+    if (value < root.value)
+      root.left = this.delete(root.left, value);
+    else if (value > root.value)
+      root.right = this.delete(root.right, value);
+    else {
+      if (!root.left) return root.right;
+      if (!root.right) return root.left;
+      // Replace with in-order successor
+      let min = root.right;
+      while (min.left) min = min.left;
+      root.value = min.value;
+      root.right = this.delete(root.right, min.value);
+    }
+    return root;
+  }
+
+  inorder(root, result = []) {
+    if (!root) return result;
+    this.inorder(root.left, result);
+    result.push(root.value);
+    this.inorder(root.right, result);
+    return result;
+  }
+}`
+  },
+  {
+    id: 'avl-tree',
+    name: 'AVL Tree',
+    category: 'tree',
+    description: 'An AVL Tree is a self-balancing BST where the height difference (balance factor) between left and right subtrees is at most 1. It performs rotations (LL, RR, LR, RL) after insertions and deletions to restore balance.',
+    timeComplexity: 'O(log n)',
+    spaceComplexity: 'O(n)',
+    code: `function height(node) {
+  return node ? node.height : 0;
+}
+function balanceFactor(node) {
+  return node ? height(node.left) - height(node.right) : 0;
+}
+function updateHeight(node) {
+  node.height = 1 + Math.max(height(node.left), height(node.right));
+}
+
+function rotateRight(y) {
+  const x = y.left;
+  y.left = x.right;
+  x.right = y;
+  updateHeight(y);
+  updateHeight(x);
+  return x; // new root
+}
+function rotateLeft(x) {
+  const y = x.right;
+  x.right = y.left;
+  y.left = x;
+  updateHeight(x);
+  updateHeight(y);
+  return y; // new root
+}
+
+function insert(root, value) {
+  if (!root) return { value, left: null, right: null, height: 1 };
+  if (value < root.value) root.left = insert(root.left, value);
+  else root.right = insert(root.right, value);
+  updateHeight(root);
+
+  const bf = balanceFactor(root);
+  if (bf > 1 && value < root.left.value)  return rotateRight(root);  // LL
+  if (bf < -1 && value > root.right.value) return rotateLeft(root);   // RR
+  if (bf > 1 && value > root.left.value) {                            // LR
+    root.left = rotateLeft(root.left);
+    return rotateRight(root);
+  }
+  if (bf < -1 && value < root.right.value) {                          // RL
+    root.right = rotateRight(root.right);
+    return rotateLeft(root);
+  }
+  return root;
+}`
+  },
+  {
+    id: 'red-black-tree',
+    name: 'Red-Black Tree',
+    category: 'tree',
+    description: 'A Red-Black Tree is a self-balancing BST where each node is colored red or black. It maintains balance through 5 properties: root is black, red nodes have black children, all paths from a node to null have the same black-height, etc.',
+    timeComplexity: 'O(log n)',
+    spaceComplexity: 'O(n)',
+    code: `// Red-Black Tree Properties:
+// 1. Every node is Red or Black
+// 2. Root is always Black
+// 3. Red node's children must be Black (no two reds in a row)
+// 4. Every path from root to null has same Black-height
+
+function insertRB(root, value) {
+  root = bstInsert(root, value, 'red');
+  root = fixViolations(root, value);
+  root.color = 'black'; // root always black
+  return root;
+}
+
+function fixViolations(root, value) {
+  // Case 1: Uncle is red → Recolor
+  // Case 2: Uncle is black, node is inner child → Rotate parent
+  // Case 3: Uncle is black, node is outer child → Rotate grandparent + recolor
+  // (full implementation uses parent pointers or recursive fix)
+  return rebalance(root);
+}
+
+function rebalance(node) {
+  if (!node) return node;
+  node.left = rebalance(node.left);
+  node.right = rebalance(node.right);
+  
+  // Fix right-leaning red link
+  if (isRed(node.right) && !isRed(node.left))
+    node = rotateLeft(node);
+  // Fix two consecutive red links
+  if (isRed(node.left) && isRed(node.left?.left))
+    node = rotateRight(node);
+  // Split 4-node
+  if (isRed(node.left) && isRed(node.right))
+    flipColors(node);
+  return node;
+}
+
+function isRed(node) {
+  return node?.color === 'red';
+}`
+  },
+
+  // Graph
+
+  {
+    id: 'graph-representation',
+    name: 'Graph Representation',
+    category: 'graph',
+    description: 'Graphs can be represented as an Adjacency Matrix (2D array where matrix[i][j] = weight) or an Adjacency List (array of lists where each index holds its neighbors). Matrix is O(V²) space; List is O(V+E) space.',
+    timeComplexity: 'O(V²) matrix / O(V+E) list',
+    spaceComplexity: 'O(V²) / O(V+E)',
+    code: `// Adjacency Matrix (weighted undirected graph)
+const matrix = [
+  //  A  B  C  D  E
+  [   0, 4, 0, 0, 8 ],  // A
+  [   4, 0, 8, 0, 11],  // B
+  [   0, 8, 0, 7, 0 ],  // C
+  [   0, 0, 7, 0, 9 ],  // D
+  [   8, 11,0, 9, 0 ],  // E
+];
+
+// Adjacency List (same graph)
+const adjList = {
+  A: [{ node: 'B', w: 4 }, { node: 'E', w: 8 }],
+  B: [{ node: 'A', w: 4 }, { node: 'C', w: 8 }, { node: 'E', w: 11 }],
+  C: [{ node: 'B', w: 8 }, { node: 'D', w: 7 }],
+  D: [{ node: 'C', w: 7 }, { node: 'E', w: 9 }],
+  E: [{ node: 'A', w: 8 }, { node: 'B', w: 11 }, { node: 'D', w: 9 }],
+};`
+  },
+  {
+    id: 'dfs',
+    name: 'Depth First Search',
+    category: 'graph',
+    description: 'DFS explores as far as possible along each branch before backtracking. Uses a stack (or recursion). Time: O(V+E). Used for cycle detection, topological sort, path finding.',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
+    code: `function dfs(graph, start) {
+  const visited = new Set();
+  const order = [];
+
+  function explore(node) {
+    if (visited.has(node)) return;
+    visited.add(node);
+    order.push(node);
+
+    for (const neighbor of graph[node]) {
+      explore(neighbor.node);
+    }
+  }
+
+  explore(start);
+  return order; // visit order
+}
+
+// Iterative version using explicit stack
+function dfsIterative(graph, start) {
+  const visited = new Set();
+  const stack = [start];
+  const order = [];
+
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!visited.has(node)) {
+      visited.add(node);
+      order.push(node);
+      for (const neighbor of graph[node].reverse()) {
+        if (!visited.has(neighbor.node)) {
+          stack.push(neighbor.node);
+        }
+      }
+    }
+  }
+  return order;
+}`
+  },
+  {
+    id: 'bfs',
+    name: 'Breadth First Search',
+    category: 'graph',
+    description: 'BFS explores all neighbors at the current depth before moving deeper. Uses a queue. Time: O(V+E). Finds shortest path in unweighted graphs, level-order traversal.',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
+    code: `function bfs(graph, start) {
+  const visited = new Set([start]);
+  const queue = [start];
+  const order = [];
+
+  while (queue.length > 0) {
+    const node = queue.shift(); // dequeue from front
+    order.push(node);
+
+    for (const neighbor of graph[node]) {
+      if (!visited.has(neighbor.node)) {
+        visited.add(neighbor.node);
+        queue.push(neighbor.node);
+      }
+    }
+  }
+
+  return order; // level-by-level visit order
+}
+
+// BFS also finds shortest path in unweighted graphs:
+function shortestPath(graph, start, end) {
+  const prev = {};
+  bfs(graph, start, prev);
+  const path = [];
+  let curr = end;
+  while (curr !== undefined) {
+    path.unshift(curr);
+    curr = prev[curr];
+  }
+  return path;
+}`
+  },
+  {
+    id: 'dijkstra',
+    name: "Dijkstra's Algorithm",
+    category: 'graph',
+    description: "Dijkstra's finds the shortest path from a source node to all other nodes in a weighted graph with non-negative edges. Uses a min-priority queue. Greedy algorithm.",
+    timeComplexity: 'O((V + E) log V)',
+    spaceComplexity: 'O(V)',
+    code: `function dijkstra(graph, source) {
+  const dist = {};
+  const visited = new Set();
+  const prev = {};
+
+  // Initialize distances to Infinity
+  for (const node of Object.keys(graph)) {
+    dist[node] = Infinity;
+  }
+  dist[source] = 0;
+
+  // Simple priority queue (min-heap)
+  const pq = [{ node: source, dist: 0 }];
+
+  while (pq.length > 0) {
+    // Extract node with minimum distance
+    pq.sort((a, b) => a.dist - b.dist);
+    const { node } = pq.shift();
+
+    if (visited.has(node)) continue;
+    visited.add(node);
+
+    for (const { node: neighbor, w } of graph[node]) {
+      const newDist = dist[node] + w;
+      if (newDist < dist[neighbor]) {
+        dist[neighbor] = newDist;
+        prev[neighbor] = node;
+        pq.push({ node: neighbor, dist: newDist });
+      }
+    }
+  }
+
+  return { dist, prev };
+}`
+  },
+  {
+    id: 'bellman-ford',
+    name: 'Bellman-Ford Algorithm',
+    category: 'graph',
+    description: 'Bellman-Ford finds shortest paths from a source to all vertices, handling negative-weight edges. It relaxes all edges V-1 times. Can detect negative-weight cycles.',
+    timeComplexity: 'O(V × E)',
+    spaceComplexity: 'O(V)',
+    code: `function bellmanFord(vertices, edges, source) {
+  const dist = {};
+  for (const v of vertices) dist[v] = Infinity;
+  dist[source] = 0;
+
+  // Relax all edges V-1 times
+  for (let i = 0; i < vertices.length - 1; i++) {
+    for (const { from, to, weight } of edges) {
+      if (dist[from] !== Infinity &&
+          dist[from] + weight < dist[to]) {
+        dist[to] = dist[from] + weight;
+      }
+    }
+  }
+
+  // Check for negative-weight cycles
+  for (const { from, to, weight } of edges) {
+    if (dist[from] !== Infinity &&
+        dist[from] + weight < dist[to]) {
+      console.log('Negative cycle detected!');
+      return null;
+    }
+  }
+
+  return dist;
+}`
+  },
+  {
+    id: 'floyd-warshall',
+    name: 'Floyd-Warshall Algorithm',
+    category: 'graph',
+    description: "Floyd-Warshall finds shortest paths between ALL pairs of vertices. Uses dynamic programming with a V×V distance matrix. Works with negative edges (but not negative cycles).",
+    timeComplexity: 'O(V³)',
+    spaceComplexity: 'O(V²)',
+    code: `function floydWarshall(graph, V) {
+  // dist[i][j] = shortest distance from i to j
+  const dist = graph.map(row => [...row]);
+
+  // Set diagonal to 0
+  for (let i = 0; i < V; i++) dist[i][i] = 0;
+
+  // Try every vertex k as intermediate point
+  for (let k = 0; k < V; k++) {
+    for (let i = 0; i < V; i++) {
+      for (let j = 0; j < V; j++) {
+        if (dist[i][k] + dist[k][j] < dist[i][j]) {
+          dist[i][j] = dist[i][k] + dist[k][j];
+        }
+      }
+    }
+  }
+  // dist[i][j] now holds shortest path from i to j
+  return dist;
+}
+
+// Initial graph (INF = no direct edge):
+// const INF = Infinity;
+// const graph = [
+//   [0,   4, INF, INF,  8],
+//   [4,   0,   8, INF, 11],
+//   [INF, 8,   0,   7, INF],
+//   [INF,INF,  7,   0,   9],
+//   [8,  11, INF,   9,   0],
+// ];`
+  },
+
 ];
 
 export const categories = [
@@ -629,6 +1008,8 @@ export const categories = [
   { id: 'queue', name: 'Queue', icon: 'List' },
   { id: 'linkedlist', name: 'Linked List', icon: 'Link' },
   { id: 'hash', name: 'Hash Function', icon: 'Hash' },
+  { id: 'tree', name: 'Tree', icon: 'GitBranch' },
+  { id: 'graph', name: 'Graph', icon: 'Network' },
 ];
 
 export const getAlgorithmsByCategory = (categoryId: string) => {

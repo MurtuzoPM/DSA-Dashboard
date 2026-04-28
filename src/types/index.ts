@@ -40,6 +40,8 @@ export interface TreeNode {
   left: string | null;
   right: string | null;
   height?: number;
+  color?: 'red' | 'black'; // for Red-Black Tree
+  balanceFactor?: number;  // for AVL Tree
 }
 
 export interface HashEntry {
@@ -48,7 +50,21 @@ export interface HashEntry {
   id: string;
 }
 
-export type AlgorithmCategory = 
+export interface GraphNode {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+}
+
+export interface GraphEdge {
+  from: string;
+  to: string;
+  weight: number;
+  directed?: boolean;
+}
+
+export type AlgorithmCategory =
   | 'searching'
   | 'sorting'
   | 'stack'
